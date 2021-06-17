@@ -1,0 +1,4 @@
+Renita	1234	25000.000		renita_baln.txt
+Sahana	5678	20000.000		sahana_baln.txt
+Pranavi	9879	5000.000		pranavi_baln.txt
+Amrutha	1234	25010.000		amrutha_baln.txt
