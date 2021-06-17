@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
@@ -10,6 +11,7 @@ typedef struct client_details
 	int pass;
 	double baln;
 	char baln_stat[100];
+	char mobile[100];
 }client_t;
 
 void displayMenu();
@@ -19,12 +21,13 @@ void moneyDeposit(client_t* data,int);
 void moneyWithdraw(client_t* data,int);
 void checkBal(client_t*,int);
 void pin_change(client_t* data,int);
+void mobile_change(client_t* data,int);
 
 void displayMenu()
 {
     printf("---------------- ATM Simulator -----------------\n");
     printf("---- Please choose one of the options below ----\n");
-    printf("1)Balance Statement\t2)Deposit\n3)Withdraw money\t4)Change pin\n");
+    printf("1)Balance Statement\t2)Deposit\n3)Withdraw Money\t4)Change Pin\n5)Change Mobile Number\n");
 }
 
 void print_to_file(client_t* data)
@@ -37,7 +40,7 @@ void print_to_file(client_t* data)
 	{
 		for(int i=0;i<4;i++)
 		{
-			fprintf(pfile,"%s\t%d\t%.3lf\t\t%s\n",(data+i)->name,(data+i)->pass,(data+i)->baln,(data+i)->baln_stat);
+			fprintf(pfile,"%s\t%d\t%.3lf\t%s\t%s\n",(data+i)->name,(data+i)->pass,(data+i)->baln,(data+i)->mobile,(data+i)->baln_stat);
 		}
 	}
 	fclose(pfile);
@@ -57,6 +60,7 @@ void checkBal(client_t* data,int i)
 {
 	printf("Account Details - \n");
     printf("Account Name    : %s \n",(data+i)->name);
+    printf("Account Number  : %s \n",(data+i)->mobile);
     printf("Account Balance : %.3lf \n",(data+i)->baln);
 	FILE *f;
 	char s;
@@ -144,6 +148,45 @@ void pin_change(client_t* data,int i)
 		printf("Please enter a four digit number");
 }
 
+void mobile_change(client_t* data,int i)
+{
+	char n1[100],n2[100];
+	printf("Enter the new number:");
+	scanf("%s",&n1);
+	printf("\nConfirm the number: ");
+	scanf("%s",&n2);
+	int l=strlen(n1);
+	int check=0;
+	for(int j=0;j<10;j++)
+	{
+		if(isdigit(n1[j])!=0)
+			check=1;
+		else
+		{
+			check=0;
+			break;
+		}
+	}
+	if(l==10  && check==1)
+	{
+		if (strcmp(n1,n2)==0)
+		{
+			for(int j=0;j<10;j++)
+			{
+				((data+i)->mobile)[j]=n2[j];
+			}
+			print_to_file(data);
+			printf("\nYour new number is %s",n2);
+		}
+		else
+		{
+			printf("Numbers don't match. Please try again.");
+		}
+	}
+	else
+		printf("Please enter a valid phone number");
+}
+
 int main()
 {
 	client_t data[100];
@@ -151,7 +194,7 @@ int main()
 	int accounts=4;
     for(int i=0;i<=accounts;i++)
     {
-        fscanf(ptr,"%s %d %lf %s",(data+i)->name,&(data+i)->pass,&(data+i)->baln,(data+i)->baln_stat);
+        fscanf(ptr,"%s %d %lf %s %s",(data+i)->name,&(data+i)->pass,&(data+i)->baln,(data+i)->mobile,(data+i)->baln_stat);
 	} 
 	fclose(ptr);
 
@@ -182,10 +225,10 @@ int main()
 			
 				if(ch == 'y')
 				{
-					int option;
+					int option=0;
 					displayMenu();
 					scanf("%d",&option);
-					if(option==NULL)
+					if(option==0)
 						scanf("%c",&ch);
 					switch (option) 
 					{
@@ -205,6 +248,10 @@ int main()
 
 						case 4:	system("CLS");
 								pin_change(data,i);
+								break;
+
+						case 5:	system("CLS");
+								mobile_change(data,i);
 								break;
 						
 						default:printf("Invalid option. Please try again\n");
