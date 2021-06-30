@@ -5,4 +5,4 @@ Functions include -
 - Deposit  
 - Withdraw  
 - Changing password  
-- View ATM Balance  
+- Changing mobile number
