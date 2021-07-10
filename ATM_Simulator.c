@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+int accounts=0;
+
 typedef struct client_details
 {
 	char name[100];
@@ -22,12 +24,15 @@ void moneyWithdraw(client_t* data,int);
 void checkBal(client_t*,int);
 void pin_change(client_t* data,int);
 void mobile_change(client_t* data,int);
+void fast_cash_stat(client_t*,int,double);
+void fast_cash(client_t*,int);
+void balance_enquiry(client_t*,int);
 
 void displayMenu()
 {
     printf("---------------- ATM Simulator -----------------\n");
     printf("---- Please choose one of the options below ----\n");
-    printf("1)Balance Statement\t2)Deposit\n3)Withdraw Money\t4)Change Pin\n5)Change Mobile Number\n");
+    printf("1)Balance Statement\t2)Deposit\n3)Withdraw Money\t4)Fast Cash\n5)Change Mobile Number\t6)Change Pin\n7)Balance enquiry\n");
 }
 
 void print_to_file(client_t* data)
@@ -38,7 +43,7 @@ void print_to_file(client_t* data)
 		printf("Error in opening the file\n");
 	else
 	{
-		for(int i=0;i<4;i++)
+		for(int i=0;i<accounts;i++)
 		{
 			fprintf(pfile,"%s\t%d\t%.3lf\t%s\t%s\n",(data+i)->name,(data+i)->pass,(data+i)->baln,(data+i)->mobile,(data+i)->baln_stat);
 		}
@@ -102,7 +107,15 @@ void moneyWithdraw(client_t* data,int i)
 		{
 			back = false;
 			(data+i)->baln -= withdraw;
-
+			print_to_file(data);
+			FILE * cfile;
+			cfile = fopen((data+i)->baln_stat,"a");
+			time_t t; // time t gives current time of system
+			time(&t);
+			char m[1000]=" ";
+			strncat(m,ctime(&t),24); // ctime to get string representation
+			fprintf(cfile,"%s\t\tWithdraw\t\t%.3lf\t\t\t%.3lf\n",m,withdraw,(data+i)->baln);
+			fclose(cfile);
 		}
 		else  
 		{
@@ -110,15 +123,6 @@ void moneyWithdraw(client_t* data,int i)
 			printf("Please contact to your Bank Customer Services\n");
 		}
     }
-	print_to_file(data);
-	FILE * cfile;
-	cfile = fopen((data+i)->baln_stat,"a");
-	time_t t; // time t gives current time of system
-    time(&t);
-    char m[1000]=" ";
-    strncat(m,ctime(&t),24); // ctime to get string representation
-	fprintf(cfile,"%s\t\tWithdraw\t\t%.3lf\t\t\t%.3lf\n",m,withdraw,(data+i)->baln);
-	fclose(cfile);
 }
 
 void pin_change(client_t* data,int i)
@@ -187,15 +191,75 @@ void mobile_change(client_t* data,int i)
 		printf("Please enter a valid phone number");
 }
 
+void fast_cash(client_t* data,int i)
+{
+	printf("1)500\t2)1000\t3)2000\n4)5000\t5)10000\n");
+	printf("Enter your option\n");
+	int n;
+	scanf("%d",&n);
+	double amt;
+
+	switch(n)
+	{
+		case 1 : fast_cash_stat(data,i,500);
+				 break;
+		
+		case 2 : fast_cash_stat(data,i,1000);
+				 break;
+
+		case 3 : fast_cash_stat(data,i,2000);
+				 break;
+		
+		case 4 : fast_cash_stat(data,i,5000);
+				 break;
+		
+		case 5 : fast_cash_stat(data,i,10000);
+				 break;
+
+		default : printf("Enter a valid option\n");
+				  break;
+		
+	}
+}
+
+void fast_cash_stat(client_t* data,int i,double amt)
+{
+	if ((data+i)->baln > amt)
+	{
+		int acc=sizeof(data)/sizeof(*data);
+		(data+i)->baln -= amt;
+		printf(" %.3lf has been withdrawn\n",amt);
+		print_to_file(data);
+		FILE * cfile;
+		cfile = fopen((data+i)->baln_stat,"a");
+		time_t t; 
+    		time(&t);
+   		char m[1000]=" ";
+   		strncat(m,ctime(&t),24); 
+		fprintf(cfile,"%s\t\tWithdraw\t\t%.3lf\t\t\t%.3lf\n",m,amt,(data+i)->baln);
+		fclose(cfile);
+	}
+	else
+		printf("Insufficient balance\n");
+}
+
+void balance_enquiry(client_t* data,int i)
+{
+	printf("Your available balance is %.3lf\n",(data+i)->baln);
+
+}
+
+
 int main()
 {
 	client_t data[100];
 	FILE* ptr = fopen("details.txt","r");
-	int accounts=4;
-    for(int i=0;i<=accounts;i++)
-    {
-        fscanf(ptr,"%s %d %lf %s %s",(data+i)->name,&(data+i)->pass,&(data+i)->baln,(data+i)->mobile,(data+i)->baln_stat);
-	} 
+	int i=0; 
+	while(fscanf(ptr,"%s %d %lf %s %s",(data+i)->name,&(data+i)->pass,&(data+i)->baln,(data+i)->mobile,(data+i)->baln_stat)!=EOF)
+	{
+		i=i+1;
+	}
+	accounts=i; //accounts to hold number of accounts
 	fclose(ptr);
 
 	char name1[100];
@@ -247,11 +311,19 @@ int main()
 								break;
 
 						case 4:	system("CLS");
-								pin_change(data,i);
+								fast_cash(data,i);
 								break;
 
 						case 5:	system("CLS");
 								mobile_change(data,i);
+								break;
+						
+						case 6:	system("CLS");
+								pin_change(data,i);
+								break;
+
+						case 7:	system("CLS");
+								balance_enquiry(data,i);
 								break;
 						
 						default:printf("Invalid option. Please try again\n");
